@@ -1,6 +1,2 @@
-node_modules/
-build/
-wrangler.toml
-artifacts/
-.idea
-cache/
+node_modules
+node_modules
