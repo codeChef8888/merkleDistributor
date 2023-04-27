@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {VRFv2Consumer} from "./VRFv2Consumer.sol";
 
 contract MerkleDistributor is ERC721Holder, ERC1155Holder {
     using SafeERC20 for IERC20;
@@ -21,6 +22,7 @@ contract MerkleDistributor is ERC721Holder, ERC1155Holder {
     mapping(address => uint256) private claimedAddress;
 
     event ClaimedERC20(address indexed _from, uint256 _dropERC20);
+    event RequestID(uint256 request);
 
     constructor(
         address token_,
@@ -53,17 +55,23 @@ contract MerkleDistributor is ERC721Holder, ERC1155Holder {
         emit ClaimedERC20(msg.sender, dropERC20);
     }
 
-    // function claim721(
-    //     address from,
-    //     address to,
-    //     uint256 tokenId,
-    //     bytes32[] calldata merkleProof
-    // ) public virtual {
-    //     // Verify the merkle proof.
-    //     bytes32 node = keccak256(abi.encodePacked(msg.sender));
-    //     if (!MerkleProof.verify(merkleProof, merkleRoot, node))
-    //         // Mark it claimed and send the token.
-    //         // claimedAddress[msg.sender] = 1;
-    //         ERC721(tokenERC721).safeTransferFrom(from, to, tokenId, "0x");
-    // }
+    function claim721(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes32[] calldata merkleProof
+    ) public virtual {
+        // Verify the merkle proof.
+        bytes32 node = keccak256(abi.encodePacked(msg.sender));
+        if (!MerkleProof.verify(merkleProof, merkleRoot, node))
+            // Mark it claimed and send the token.
+            // claimedAddress[msg.sender] = 1;
+            ERC721(tokenERC721).safeTransferFrom(from, to, tokenId, "0x");
+    }
+
+    function drawWinner() external {
+        VRFv2Consumer vrfv2Consumer = new VRFv2Consumer(449);
+        uint256 requestID = vrfv2Consumer.requestRandomWords();
+        emit RequestID(requestID);
+    }
 }
